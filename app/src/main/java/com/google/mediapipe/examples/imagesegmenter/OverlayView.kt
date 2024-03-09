@@ -99,6 +99,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
         val scaleHeight = (outputHeight * scaleFactor).toInt()
 
         // Crop the original bitmap with the mask and apply blur style
+        // Check also OpenCVUtils for resize options.
         val smallBitmap = originalBitmap
             .let { Bitmap.createScaledBitmap(it, outputWidth, outputHeight, false) }
             .let { cropBitmapWithMask(it, mask, "blur2.jpg") }

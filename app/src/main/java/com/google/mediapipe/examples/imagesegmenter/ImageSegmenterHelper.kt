@@ -157,7 +157,6 @@ class ImageSegmenterHelper(
         val bitmapBuffer = Bitmap.createBitmap(
             imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888
         )
-        Log.v("Size_imageproxy", imageProxy.width.toString())
 
         imageProxy.use {
             bitmapBuffer.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
@@ -179,7 +178,6 @@ class ImageSegmenterHelper(
 
         imageProxy.close()
 
-        Log.v("Size_bitmapBuffer", bitmapBuffer.width.toString())
         rotatedBitmap = Bitmap.createBitmap(
             bitmapBuffer,
             0,
@@ -233,7 +231,6 @@ class ImageSegmenterHelper(
         // We only need the first mask for this sample because we are using
         // the OutputType CATEGORY_MASK, which only provides a single mask.
         val mpImage = result.categoryMask().get()
-        Log.v("Size_mpimage", mpImage.height.toString())
 
         imageSegmenterListener?.onResults(
             rotatedBitmap,
