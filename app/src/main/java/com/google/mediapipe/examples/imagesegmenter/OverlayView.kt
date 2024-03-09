@@ -29,7 +29,6 @@ import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import java.nio.ByteBuffer
@@ -61,63 +60,6 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
         this.runningMode = runningMode
     }
 
-    /*fun setResults(
-        originalBitmap: Bitmap? = null,
-        byteBuffer: ByteBuffer,
-        outputWidth: Int,
-        outputHeight: Int
-    ) {
-        // Create the mask bitmap with colors and the set of detected labels.
-        Log.v("Size_bitmap", originalBitmap?.height.toString())
-        Log.v("Size_bitmap_output", outputWidth.toString())
-        val pixels = IntArray(byteBuffer.capacity())
-        for (i in pixels.indices) {
-            // Using unsigned int here because selfie segmentation returns 0 or 255U (-1 signed)
-            // with 0 being the found person, 255U for no label.
-            // Deeplab uses 0 for background and other labels are 1-19,
-            // so only providing 20 colors from ImageSegmenterHelper -> labelColors
-            val index = byteBuffer.get(i).toUInt() % 20U
-            //Log.v("pixel_integers", index.toInt().toString())
-            val color = if (index.toInt() == 0) Color.BLACK else Color.TRANSPARENT //ImageSegmenterHelper.labelColors[index.toInt()].toAlphaColor()
-            pixels[i] = color
-        }
-        val mask = Bitmap.createBitmap(
-            pixels,
-            outputWidth,
-            outputHeight,
-            Bitmap.Config.ARGB_8888
-        )
-
-        // Scale below
-        val scaleFactor = when (runningMode) {
-            RunningMode.IMAGE,
-            RunningMode.VIDEO -> {
-                min(width * 1f / outputWidth, height * 1f / outputHeight)
-            }
-            RunningMode.LIVE_STREAM -> {
-                // PreviewView is in FILL_START mode. So we need to scale up the
-                // landmarks to match with the size that the captured images will be
-                // displayed.
-                max(width * 1f / outputWidth, height * 1f / outputHeight)
-            }
-        }
-
-        val scaleWidth = (outputWidth * scaleFactor).toInt()
-        val scaleHeight = (outputHeight * scaleFactor).toInt()
-
-        //val originalBitmapScaled = originalBitmap?.let { Bitmap.createScaledBitmap(it, scaleWidth, scaleHeight, false) }
-        //val maskScaled = Bitmap.createScaledBitmap(mask, scaleWidth, scaleHeight, false)
-        // val smallBitmap = originalBitmap?.let { cropBitmapWithMask(it, mask, "agray.jpg") }
-        val smallMask = Bitmap.createScaledBitmap(mask, 240, 320, false)
-        val smallOriginalBitmap = originalBitmap?.let { Bitmap.createScaledBitmap(it, 240, 320, false) }
-
-        val smallBitmap = smallOriginalBitmap?.let { cropBitmapWithMask(it, smallMask, "blur2.jpg") }
-
-        scaleBitmap = smallBitmap?.let { Bitmap.createScaledBitmap(it, scaleWidth, scaleHeight, false) }
-        //scaleBitmap = smallBitmap?.let { OpenCVUtils.resizeBitmap(it, scaleWidth, scaleHeight) }
-
-        invalidate()
-    }*/
     fun setResults(
         originalBitmap: Bitmap? = null,
         byteBuffer: ByteBuffer,
@@ -147,6 +89,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
             RunningMode.VIDEO -> {
                 min(width * 1f / outputWidth, height * 1f / outputHeight)
             }
+
             RunningMode.LIVE_STREAM -> {
                 max(width * 1f / outputWidth, height * 1f / outputHeight)
             }
@@ -160,78 +103,10 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
             .let { Bitmap.createScaledBitmap(it, outputWidth, outputHeight, false) }
             .let { cropBitmapWithMask(it, mask, "blur2.jpg") }
 
-        ////////////
-        // Or make smaller bitmaps
-
-        /*val smallMask = Bitmap.createScaledBitmap(mask, 240, 320, false)
-        val smallOriginalBitmap = originalBitmap?.let { Bitmap.createScaledBitmap(it, 240, 320, false) }
-
-        val smallBitmap = smallOriginalBitmap?.let { cropBitmapWithMask(it, smallMask, "blur2.jpg") }
-
-        scaleBitmap = smallBitmap?.let { Bitmap.createScaledBitmap(it, scaleWidth, scaleHeight, false) }*/
-
-        ////////////
-
         // Scale the resulting bitmap to fit the view
-        scaleBitmap = smallBitmap?.let { Bitmap.createScaledBitmap(it, scaleWidth, scaleHeight, false) }
-
-        //invalidate()
+        scaleBitmap =
+            smallBitmap?.let { Bitmap.createScaledBitmap(it, scaleWidth, scaleHeight, false) }
     }
-
-
-    /*private fun cropBitmapWithMask(original: Bitmap, mask: Bitmap?, style: String): Bitmap? {
-        if (original == null || mask == null
-        ) {
-            return null
-        }
-        // Log.i("ORIGINAL_WIDTH", original.width.toString())
-        // Log.i("ORIGINAL_HEIGHT", original.height.toString())
-        // Log.i("MASK_WIDTH", original.width.toString())
-        // Log.i("MASK_HEIGHT", original.height.toString())
-        val w = original.width
-        val h = original.height
-        if (w <= 0 || h <= 0) {
-            return null
-        }
-
-        // Generate colored foreground with transparent background
-        val cropped: Bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(cropped)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
-        canvas.drawBitmap(original, 0f, 0f, null)
-        canvas.drawBitmap(mask, 0f, 0f, paint)
-        paint.xfermode = null
-
-        // Generate final bitmap with colored foreground and B/W background
-        *//*val croppedFinal: Bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val canvasFinal = Canvas(croppedFinal)
-        val paintFinal = Paint(Paint.ANTI_ALIAS_FLAG)
-        paintFinal.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
-        when (style) {
-            "agray.jpg" -> canvasFinal.drawBitmap(androidGrayScale(original), 0f, 0f, null)
-            "blur1.jpg" -> canvasFinal.drawBitmap(blurImage(original, 5), 0f, 0f, null)
-            "blur2.jpg" -> canvasFinal.drawBitmap(blurImage(original, 10), 0f, 0f, null)
-            "blur3.jpg" -> canvasFinal.drawBitmap(blurImage(original, 15), 0f, 0f, null)
-            "sepia.jpg" -> canvasFinal.drawBitmap(setSepiaColorFilter(original), 0f, 0f, null)
-        }
-        //canvasFinal.drawBitmap(setSepiaColorFilter(original), 0f, 0f, null)
-        canvasFinal.drawBitmap(cropped, 0f, 0f, paint)
-        paintFinal.xfermode = null*//*
-
-
-
-        var finalBitmap: Bitmap? = null
-        when (style) {
-            "agray.jpg" -> finalBitmap = androidGrayScale(cropped)
-            "blur1.jpg" -> finalBitmap = blurImage(cropped, 5)
-            "blur2.jpg" -> finalBitmap = blurImage(cropped, 10)
-            "blur3.jpg" -> finalBitmap = blurImage(cropped, 15)
-            "sepia.jpg" -> finalBitmap = setSepiaColorFilter(cropped)
-        }
-
-        return finalBitmap
-    }*/
 
     private fun cropBitmapWithMask(original: Bitmap, mask: Bitmap?, style: String): Bitmap? {
         if (original == null || mask == null) {
@@ -315,26 +190,6 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
         canvas.drawBitmap(bmpOriginal, 0f, 0f, paint)
         return bmpGrayscale
     }
-
-    /*private fun blurImage(input: Bitmap, number: Int): Bitmap {
-        return try {
-            val rsScript = RenderScript.create(context)
-            val alloc = Allocation.createFromBitmap(rsScript, input)
-            val blur = ScriptIntrinsicBlur.create(rsScript, Element.U8_4(rsScript))
-            // Set different values for different blur effect
-            blur.setRadius(number.toFloat())
-            blur.setInput(alloc)
-            val result = Bitmap.createBitmap(input.width, input.height, Bitmap.Config.ARGB_8888)
-            val outAlloc = Allocation.createFromBitmap(rsScript, result)
-            blur.forEach(outAlloc)
-            outAlloc.copyTo(result)
-            rsScript.destroy()
-            result
-        } catch (e: Exception) {
-            // TODO: handle exception
-            input
-        }
-    }*/
 
     private fun setSepiaColorFilter(bmpOriginal: Bitmap): Bitmap {
         val height: Int = bmpOriginal.height
