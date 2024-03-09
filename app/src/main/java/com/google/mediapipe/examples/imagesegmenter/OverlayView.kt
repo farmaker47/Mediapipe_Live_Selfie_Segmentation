@@ -102,7 +102,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
         // Check also OpenCVUtils for resize options.
         val smallBitmap = originalBitmap
             .let { Bitmap.createScaledBitmap(it, outputWidth, outputHeight, false) }
-            .let { cropBitmapWithMask(it, mask, "blur2.jpg") }
+            .let { cropBitmapWithMask(it, mask, "gray.jpg") }
 
         // Scale the resulting bitmap to fit the view
         scaleBitmap =
@@ -135,7 +135,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
 
         // Apply style based on input
         return when (style) {
-            "agray.jpg" -> androidGrayScale(cropped)
+            "gray.jpg" -> androidGrayScale(cropped)
             "blur1.jpg" -> blurImage(cropped, 5)
             "blur2.jpg" -> blurImage(cropped, 10)
             "blur3.jpg" -> blurImage(cropped, 15)
