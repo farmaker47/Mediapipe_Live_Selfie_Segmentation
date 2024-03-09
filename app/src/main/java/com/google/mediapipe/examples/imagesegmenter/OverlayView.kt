@@ -102,7 +102,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
         // Check also OpenCVUtils for resize options.
         val smallBitmap = originalBitmap
             .let { Bitmap.createScaledBitmap(it, outputWidth, outputHeight, false) }
-            .let { cropBitmapWithMask(it, mask, "gray.jpg") }
+            .let { cropBitmapWithMask(it, mask, "blur3.jpg") }
 
         // Scale the resulting bitmap to fit the view
         scaleBitmap =
