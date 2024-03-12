@@ -24,12 +24,9 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.renderscript.Allocation
-import android.renderscript.Element
-import android.renderscript.RenderScript
-import android.renderscript.ScriptIntrinsicBlur
 import android.util.AttributeSet
 import android.view.View
+import com.google.mediapipe.examples.imagesegmenter.toolkit.Toolkit
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import java.nio.ByteBuffer
 import kotlin.math.max
@@ -43,10 +40,15 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
 
     private var scaleBitmap: Bitmap? = null
     private var runningMode: RunningMode = RunningMode.IMAGE
+    // private val processor: RenderEffectImageProcessor = RenderEffectImageProcessor()
 
     fun clear() {
         scaleBitmap = null
         invalidate()
+    }
+
+    init {
+        // processor.configureInputAndOutput(Bitmap.createBitmap(480,640,Bitmap.Config.ARGB_8888),1)
     }
 
     override fun draw(canvas: Canvas) {
@@ -100,7 +102,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
 
         // Crop the original bitmap with the mask and apply blur style
         // Check also OpenCVUtils for resize options.
-        val smallBitmap = cropBitmapWithMask(originalBitmap, mask, "blur1.jpg")
+        val smallBitmap = cropBitmapWithMask(originalBitmap, mask, "blur2.jpg")
 
         // Scale the resulting bitmap to fit the view
         scaleBitmap =
@@ -143,7 +145,15 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
     }
 
     private fun blurImage(input: Bitmap, number: Int): Bitmap {
-        return try {
+
+        // Use migration from Renderscript based on
+        // https://developer.android.com/guide/topics/renderscript/migrate
+        return Toolkit.blur(input, number)
+
+
+        // Use old implementation with Renderscript intrisicts
+        //
+        /*return try {
             val rsScript = RenderScript.create(context)
             val alloc = Allocation.createFromBitmap(rsScript, input)
             val blur = ScriptIntrinsicBlur.create(rsScript, Element.U8_4(rsScript))
@@ -161,9 +171,40 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
             rsScript.destroy()
             result
         } catch (e: Exception) {
-            // TODO: handle exception
             input
-        }
+        }*/
+
+        // Use implementation with Renderscript intrisicts for old devices and Render effect for SDK > 31
+        /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return try {
+                val rsScript = RenderScript.create(context)
+                val alloc = Allocation.createFromBitmap(rsScript, input)
+                val blur = ScriptIntrinsicBlur.create(rsScript, Element.U8_4(rsScript))
+
+                // Set different values for different blur effect
+                blur.setRadius(number.toFloat())
+                blur.setInput(alloc)
+
+                // Reuse the input bitmap for the result
+                val result = Bitmap.createBitmap(input)
+                val outAlloc = Allocation.createFromBitmap(rsScript, result)
+                blur.forEach(outAlloc)
+                outAlloc.copyTo(result)
+
+                rsScript.destroy()
+                result
+            } catch (e: Exception) {
+                input
+            }
+        } else {
+            return try {
+                //processor.configureInputAndOutput(input,2)
+                val output = processor.blur(3.0f,0, input)
+                output
+            } catch (e: Exception) {
+                input
+            }
+        }*/
     }
 
     private fun androidGrayScale(bmpOriginal: Bitmap): Bitmap {
